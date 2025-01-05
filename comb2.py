@@ -1,28 +1,48 @@
 import pandas as pd
-from datetime import datetime
 
 
 def transform_csv(input_file, output_file, columns_to):
     # Read the original CSV file
-    old_df = pd.read_csv(input_file, low_memory=False)
-    print('File Read.' + str(datetime.now()))
-    
-    # Melt the DataFrame to transform from wide to long format
-    id_vars = [col for col in old_df.columns if col not in columns_to]
-    new_df = pd.melt(old_df, id_vars=id_vars, value_vars=columns_to, var_name='Question', value_name='Answer')
-    print('File melted.' + str(datetime.now()))
+    df = pd.read_csv(input_file, low_memory=False)
+    #get unique names
+    wrestlers = df['name'].unique()
+    types = []
+    dup_wrestlers = []
+    for wrestler in wrestlers:
 
-    # Add 'Question' and 'Answer' columns
-    new_df['Question'] = new_df['Question'].apply(lambda x: x)  # Assuming columns are named as 'Q_xxx'
-    print('Questions added.' + str(datetime.now()))
+        values = df.loc[df['name'] == wrestler, 'type']
 
-    new_df = new_df[id_vars + ['Question'] + ['Answer']]  # Rearrange columns
-    print('Columns rearranged.' + str(datetime.now()))
+        modval = modify_columns(values, wrestler)
+        types.append(modval)
 
-    # Save the transformed DataFrame to a new CSV file
-    new_df.to_csv(output_file, index=False)
-    print('File saved.' + str(datetime.now()))
+    data = {'name': wrestlers, 'type': types}
 
+
+    new_df = pd.DataFrame(data);
+    new_df.to_csv('outputA.csv', index=False)
+
+
+def modify_columns(strings, wrestler):
+    modified_strings = []
+    wrestlers = []
+    base_types = ['Base', 'Base Amethyst', 'Base Emerald', 'Base Gold', 'Base Platinum', 'Base Ruby']
+
+    for s in strings:
+        # Split the string into words
+        words = s.split()
+
+        first_two_words = words[0]
+        # Check if there are at least two words
+        if len(words) >= 2 and s not in base_types:
+            # Compare the first two words to the others
+            first_two_words = words[0] +' '+ words[1]
+
+
+        if first_two_words not in modified_strings:
+            modified_strings.append(first_two_words)
+
+
+    return ", ".join(modified_strings)
 
 # creating inputs
 columns_to_rearrange = ['name', 'type']
